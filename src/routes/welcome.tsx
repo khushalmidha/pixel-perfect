@@ -137,7 +137,7 @@ function Question({
 }: {
   index: number;
   q: (typeof questions)[number];
-  selected?: string;
+  selected?: string | undefined;
   onChoose: (k: Key, v: string) => void;
   onBack: () => void;
 }) {
