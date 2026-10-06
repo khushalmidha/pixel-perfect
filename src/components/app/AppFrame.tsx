@@ -28,7 +28,7 @@ function BottomNav() {
   );
 }
 
-function TopBar({ back }: { back?: { to: string; label: string } }) {
+function TopBar({ back }: { back?: { to: string; label: string } | undefined }) {
   return (
     <header className="animate-rise relative z-10 flex items-center justify-between px-5 pb-4 pt-6">
       {back ? (
@@ -56,7 +56,7 @@ export function AppFrame({
 }: {
   children: ReactNode;
   nav?: boolean;
-  back?: { to: string; label: string };
+  back?: { to: string; label: string } | undefined;
 }) {
   return (
     <div className="flex min-h-screen justify-center bg-background sm:py-6">
