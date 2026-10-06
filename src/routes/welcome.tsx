@@ -82,8 +82,8 @@ function Welcome() {
         <Question
           key={step}
           index={step}
-          q={questions[step - 1]}
-          selected={answers[questions[step - 1].key]}
+          q={questions[step - 1]!}
+          selected={answers[questions[step - 1]!.key]}
           onChoose={choose}
           onBack={() => setStep((s) => s - 1)}
         />
