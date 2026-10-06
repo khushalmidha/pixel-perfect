@@ -10,33 +10,124 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ExploreRouteImport } from './routes/explore'
+import { Route as JourneyRouteImport } from './routes/journey'
+import { Route as LearnRouteImport } from './routes/learn'
+import { Route as PlanRouteImport } from './routes/plan'
+import { Route as WelcomeRouteImport } from './routes/welcome'
+import { Route as ExploreIndexRouteImport } from './routes/explore.index'
+import { Route as ExploreFundIdRouteImport } from './routes/explore.$fundId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExploreRoute = ExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JourneyRoute = JourneyRouteImport.update({
+  id: '/journey',
+  path: '/journey',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LearnRoute = LearnRouteImport.update({
+  id: '/learn',
+  path: '/learn',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanRoute = PlanRouteImport.update({
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WelcomeRoute = WelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExploreIndexRoute = ExploreIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ExploreRoute,
+} as any)
+const ExploreFundIdRoute = ExploreFundIdRouteImport.update({
+  id: '/$fundId',
+  path: '/$fundId',
+  getParentRoute: () => ExploreRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/explore': typeof ExploreRouteWithChildren
+  '/journey': typeof JourneyRoute
+  '/learn': typeof LearnRoute
+  '/plan': typeof PlanRoute
+  '/welcome': typeof WelcomeRoute
+  '/explore/$fundId': typeof ExploreFundIdRoute
+  '/explore/': typeof ExploreIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/journey': typeof JourneyRoute
+  '/learn': typeof LearnRoute
+  '/plan': typeof PlanRoute
+  '/welcome': typeof WelcomeRoute
+  '/explore/$fundId': typeof ExploreFundIdRoute
+  '/explore': typeof ExploreIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/explore': typeof ExploreRouteWithChildren
+  '/journey': typeof JourneyRoute
+  '/learn': typeof LearnRoute
+  '/plan': typeof PlanRoute
+  '/welcome': typeof WelcomeRoute
+  '/explore/$fundId': typeof ExploreFundIdRoute
+  '/explore/': typeof ExploreIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/explore'
+    | '/journey'
+    | '/learn'
+    | '/plan'
+    | '/welcome'
+    | '/explore/$fundId'
+    | '/explore/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/journey'
+    | '/learn'
+    | '/plan'
+    | '/welcome'
+    | '/explore/$fundId'
+    | '/explore'
+  id:
+    | '__root__'
+    | '/'
+    | '/explore'
+    | '/journey'
+    | '/learn'
+    | '/plan'
+    | '/welcome'
+    | '/explore/$fundId'
+    | '/explore/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ExploreRoute: typeof ExploreRouteWithChildren
+  JourneyRoute: typeof JourneyRoute
+  LearnRoute: typeof LearnRoute
+  PlanRoute: typeof PlanRoute
+  WelcomeRoute: typeof WelcomeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +139,78 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/explore': {
+      id: '/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof ExploreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journey': {
+      id: '/journey'
+      path: '/journey'
+      fullPath: '/journey'
+      preLoaderRoute: typeof JourneyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/learn': {
+      id: '/learn'
+      path: '/learn'
+      fullPath: '/learn'
+      preLoaderRoute: typeof LearnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plan': {
+      id: '/plan'
+      path: '/plan'
+      fullPath: '/plan'
+      preLoaderRoute: typeof PlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/welcome': {
+      id: '/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof WelcomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/explore/': {
+      id: '/explore/'
+      path: '/'
+      fullPath: '/explore/'
+      preLoaderRoute: typeof ExploreIndexRouteImport
+      parentRoute: typeof ExploreRoute
+    }
+    '/explore/$fundId': {
+      id: '/explore/$fundId'
+      path: '/$fundId'
+      fullPath: '/explore/$fundId'
+      preLoaderRoute: typeof ExploreFundIdRouteImport
+      parentRoute: typeof ExploreRoute
+    }
   }
 }
 
+interface ExploreRouteChildren {
+  ExploreFundIdRoute: typeof ExploreFundIdRoute
+  ExploreIndexRoute: typeof ExploreIndexRoute
+}
+
+const ExploreRouteChildren: ExploreRouteChildren = {
+  ExploreFundIdRoute: ExploreFundIdRoute,
+  ExploreIndexRoute: ExploreIndexRoute,
+}
+
+const ExploreRouteWithChildren =
+  ExploreRoute._addFileChildren(ExploreRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ExploreRoute: ExploreRouteWithChildren,
+  JourneyRoute: JourneyRoute,
+  LearnRoute: LearnRoute,
+  PlanRoute: PlanRoute,
+  WelcomeRoute: WelcomeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
