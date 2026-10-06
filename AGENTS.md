@@ -1,10 +1,4 @@
-<!-- LOVABLE:BEGIN -->
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
-<!-- LOVABLE:END -->
+# Agent rules
+- Every screen renders inside `AppFrame` (src/components/app) — keeps the phone-width shell, grid and bottom nav consistent.
+- In-context education uses `Explainer`, `RiskNote`, `AdviceNote` from src/components/app/education.tsx — education lives at the decision point, never only in /learn.
+- All data comes from src/lib/mock-data.ts — this is a case-study prototype with no real trading.
