@@ -1,85 +1,62 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { AppFrame } from "@/components/app/AppFrame";
-import { ActionLink, Eyebrow, Panel, ProgressLine, ScreenIntro } from "@/components/app/primitives";
-import { AdviceNote, Explainer, RiskNote } from "@/components/app/education";
-import { formatINR, getFund, starterPlan } from "@/lib/mock-data";
+import { ActionLink, Panel, ScreenIntro } from "@/components/app/primitives";
+import { AdviceNote } from "@/components/app/education";
+import { StartingPointCard } from "@/components/app/StartingPointCard";
+import { useStartingPoint } from "@/lib/plan-context";
+import { storageFailureMessage } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Steady — your first investment, one calm step" },
-      { name: "description", content: "A calm investing companion for first-time investors in India." },
-      { property: "og:title", content: "Steady — your first investment, one calm step" },
-      { property: "og:description", content: "Start small, understand every rupee, and invest without the hesitation." },
+      { title: "Steady — understand before you invest" },
+      { name: "description", content: "Find a useful place to begin learning about investing." },
     ],
   }),
   component: Home,
 });
-
 function Home() {
-  const fund = getFund(starterPlan.fundId)!;
+  const { startingPoint, hydrated, storageAvailable } = useStartingPoint();
   return (
     <AppFrame>
       <ScreenIntro
-        eyebrow="Your one next step"
-        title="Start with what you already have."
-        body="You don't need a big amount. You need one small, patient habit. We'll walk through it together."
+        eyebrow="One useful next step"
+        title="What can I understand next?"
+        body="Understand investing at your pace, starting with what matters to you."
       />
-
-      <section className="animate-rise px-5" style={{ animationDelay: "140ms" }}>
-        <Panel variant="focus">
-          <div className="flex items-start justify-between">
-            <div>
-              <Eyebrow>Starter plan</Eyebrow>
-              <p className="mt-2 text-[22px] font-semibold tracking-tight">
-                {formatINR(starterPlan.monthly)}
-                <span className="text-[13px] font-normal text-muted-foreground"> / month</span>
+      <div className="flex flex-col gap-4 px-5">
+        {!hydrated ? (
+          <p role="status">Loading your starting point…</p>
+        ) : startingPoint ? (
+          <>
+            <StartingPointCard from="/" />
+            <ActionLink to="/plan" variant="ghost">
+              Review my Starting Point
+            </ActionLink>
+          </>
+        ) : (
+          <>
+            {!storageAvailable && (
+              <p role="status" className="text-[12px] text-muted-foreground">
+                {storageFailureMessage}
               </p>
-            </div>
-            <div className="text-right">
-              <p className="text-[11px] text-muted-foreground">into</p>
-              <p className="text-[12px] font-medium text-warm">{fund.name.replace(" Fund", "")}</p>
-            </div>
-          </div>
-          <div className="mt-4 border-t border-line pt-3">
-            <ProgressLine
-              value={starterPlan.progress}
-              caption="You've set your amount — you're already past the hardest part."
-            />
-          </div>
-          <ActionLink to="/plan" className="mt-4">
-            Review my ₹500 plan
-          </ActionLink>
-          <p className="mt-2.5 text-center text-[11px] text-muted-foreground">
-            Pause or change the amount any day. No lock-in.
-          </p>
-        </Panel>
-      </section>
-
-      <section className="animate-rise mt-6 px-5" style={{ animationDelay: "210ms" }}>
-        <Panel>
-          <Eyebrow tone="warm">What you're buying</Eyebrow>
-          <Link to="/explore/$fundId" params={{ fundId: fund.id }}>
-            <h2 className="mt-2 text-[17px] font-semibold tracking-tight hover:text-primary">{fund.name}</h2>
-          </Link>
-          <p className="mt-2 text-pretty text-[13px] leading-[1.55] text-muted-foreground">
-            {fund.oneLiner} {fund.whatYouOwn}
-          </p>
-          <div className="mt-4">
-            <RiskNote level={fund.risk}>{fund.riskInWords}</RiskNote>
-          </div>
-          <div className="mt-4">
-            <Explainer question={`What does "index fund" mean?`}>
-              An index fund copies a list of companies instead of a person picking winners. Because it
-              just copies, it charges very little — and no one is guessing on your behalf.
-            </Explainer>
-          </div>
-        </Panel>
-      </section>
-
-      <section className="animate-rise mt-5 px-5" style={{ animationDelay: "280ms" }}>
+            )}
+            <Panel variant="focus">
+              <p className="text-[14px] leading-[1.5]">
+                Three short questions help us choose a useful place for you to learn. You can also
+                explore without answering.
+              </p>
+              <ActionLink to="/welcome" className="mt-4">
+                Find my starting point
+              </ActionLink>
+            </Panel>
+            <ActionLink to="/learn" search={{}} variant="ghost">
+              Browse lessons
+            </ActionLink>
+          </>
+        )}
         <AdviceNote />
-      </section>
+      </div>
     </AppFrame>
   );
 }

@@ -18,7 +18,7 @@ export function Eyebrow({
 }
 
 /* ---------- Panel (card) ---------- */
-const panelVariants = cva("rounded-[18px] border p-5", {
+const panelVariants = cva("min-w-0 break-words rounded-[18px] border p-5", {
   variants: {
     variant: {
       default: "border-line bg-surface",
@@ -40,7 +40,7 @@ export function Panel({
 
 /* ---------- Action button / link ---------- */
 const actionVariants = cva(
-  "inline-flex w-full items-center justify-center gap-2 rounded-[12px] py-3 text-[15px] font-semibold tracking-tight transition",
+  "inline-flex min-h-11 w-full min-w-0 items-center justify-center gap-2 whitespace-normal rounded-[12px] px-4 py-3 text-center text-[15px] font-semibold leading-snug tracking-tight transition disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -91,7 +91,9 @@ export function ScreenIntro({
   return (
     <section className="animate-rise px-5 pb-6 pt-2">
       <Eyebrow className="mb-3">{eyebrow}</Eyebrow>
-      <h1 className="text-balance text-[30px] font-bold leading-[1.06] tracking-tight">{title}</h1>
+      <h1 className="break-words text-balance text-[30px] font-bold leading-[1.06] tracking-tight">
+        {title}
+      </h1>
       {body && (
         <p className="mt-3 max-w-[34ch] text-pretty text-[14px] leading-[1.5] text-muted-foreground">
           {body}

@@ -1,27 +1,40 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppFrame } from "@/components/app/AppFrame";
-import { ActionButton, ActionLink, Eyebrow, Panel, ProgressLine } from "@/components/app/primitives";
-import { AdviceNote, Explainer, RiskNote } from "@/components/app/education";
 import {
-  buildPlan,
+  ActionButton,
+  ActionLink,
+  Eyebrow,
+  Panel,
+  ProgressLine,
+} from "@/components/app/primitives";
+import { AdviceNote, Explainer } from "@/components/app/education";
+import { StartingPointCard, ReportedAnswers } from "@/components/app/StartingPointCard";
+import {
   cushionOptions,
   feelingOptions,
-  incomeOptions,
+  isCompleteAnswers,
+  isValidAnswer,
   leftoverOptions,
   type Answers,
   type Option,
 } from "@/lib/starter-plan";
-import { formatINR } from "@/lib/mock-data";
+import { useStartingPoint } from "@/lib/plan-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/welcome")({
   head: () => ({
     meta: [
       { title: "Welcome — Steady" },
-      { name: "description", content: "Four gentle questions to find a comfortable first investing plan." },
+      {
+        name: "description",
+        content: "Three questions to find a useful place to begin learning.",
+      },
       { property: "og:title", content: "Welcome — Steady" },
-      { property: "og:description", content: "Find your starting point and a comfortable amount in under three minutes." },
+      {
+        property: "og:description",
+        content: "Find a useful learning focus from three short answers.",
+      },
     ],
   }),
   component: Welcome,
@@ -37,75 +50,144 @@ const questions: {
   why: string;
 }[] = [
   {
-    key: "income",
-    prompt: "Roughly how much money comes in each month?",
-    aside: "Salary, stipend, freelance, pocket money — a rough range is enough.",
-    options: incomeOptions,
-    why: "It helps us keep suggestions in proportion to your life. We never ask for payslips, and nothing is checked.",
-  },
-  {
     key: "leftover",
     prompt: "After rent, food and the usual, how much is usually left?",
-    aside: "Think of an average month, not your best one.",
+    aside: "Think of an average month, including months when nothing is comfortably spare.",
     options: leftoverOptions,
-    why: "This matters more than income. You should only ever invest from money that's genuinely spare — never from what you need.",
+    why: "This helps us choose whether to begin with understanding spare money. It does not set an investment budget.",
   },
   {
     key: "cushion",
     prompt: "Do you have some money set aside for emergencies?",
     aside: "Like a phone breaking, a medical bill, or a gap between jobs.",
     options: cushionOptions,
-    why: "Investments can be down at the exact moment you need cash. A cushion means you'll never be forced to take money out at a bad time.",
+    why: "Investments can be down at the exact moment you need cash. A cushion can reduce the chance that an unexpected expense forces you to withdraw at a difficult time.",
   },
   {
     key: "feeling",
-    prompt: "If the money you invested went down for a while, how would you feel?",
+    prompt: "If the money you invested fell in value, how would you feel?",
     aside: "There's no right answer. Be honest — this is about you, not a test.",
     options: feelingOptions,
-    why: "Almost every investment dips sometimes. Knowing how you'd react helps us pick something you can stay calm with.",
+    why: "Funds can lose value, sometimes sharply. Your answer helps us choose a useful explanation about risk.",
   },
 ];
 
 function Welcome() {
-  const [step, setStep] = useState(0); // 0 intro, 1-4 questions, 5 summary
+  const { startingPoint, hydrated, saveStartingPoint } = useStartingPoint();
+  const [step, setStep] = useState(0); // 0 intro, 1-3 questions, 4 summary
   const [answers, setAnswers] = useState<Answers>({});
+  const [initialized, setInitialized] = useState(false);
+  const [advancing, setAdvancing] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const pendingAdvance = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Restore once, after hydration. Provider updates must not overwrite a draft.
+  useEffect(() => {
+    if (!hydrated || initialized) return;
+    setAnswers(startingPoint ? { ...startingPoint.answers } : {});
+    setStep(startingPoint ? 1 : 0);
+    setInitialized(true);
+  }, [hydrated, initialized, startingPoint]);
+
+  useEffect(
+    () => () => {
+      if (pendingAdvance.current !== null) clearTimeout(pendingAdvance.current);
+    },
+    [],
+  );
+
+  const cancelAdvance = () => {
+    if (pendingAdvance.current !== null) clearTimeout(pendingAdvance.current);
+    pendingAdvance.current = null;
+    setAdvancing(false);
+  };
 
   const choose = (key: Key, value: string) => {
-    setAnswers((a) => ({ ...a, [key]: value }));
-    setTimeout(() => setStep((s) => s + 1), 260);
+    // The ref locks synchronously, even before React disables the buttons.
+    if (pendingAdvance.current !== null || questions[step - 1]?.key !== key) return;
+    if (!isValidAnswer(key, value)) {
+      setMessage("Please choose one of the answers below.");
+      return;
+    }
+    const updated: Answers = { ...answers, [key]: value };
+    setAnswers(updated);
+    setMessage(null);
+    setAdvancing(true);
+    pendingAdvance.current = setTimeout(() => {
+      pendingAdvance.current = null;
+      setAdvancing(false);
+      if (step < questions.length) {
+        setStep(step + 1);
+        return;
+      }
+      if (!isCompleteAnswers(updated)) {
+        const missing = questions.findIndex((q) => !isValidAnswer(q.key, updated[q.key]));
+        setStep(missing + 1);
+        setMessage("Please answer this question so we can finish your starting point.");
+        return;
+      }
+      if (saveStartingPoint(updated)) setStep(questions.length + 1);
+      else setMessage("Please review your answers before finishing your starting point.");
+    }, 260);
   };
+
+  const goBack = () => {
+    cancelAdvance();
+    setMessage(null);
+    setStep(Math.max(0, step - 1));
+  };
+
+  const restart = () => {
+    cancelAdvance();
+    setAnswers(startingPoint ? { ...startingPoint.answers } : {});
+    setMessage(null);
+    setStep(1);
+  };
+
+  if (!hydrated || !initialized)
+    return (
+      <AppFrame nav={false}>
+        <p role="status" className="px-5 text-[13px] text-muted-foreground">
+          Loading your starting point…
+        </p>
+      </AppFrame>
+    );
 
   return (
     <AppFrame nav={false}>
-      {step === 0 && <Intro onStart={() => setStep(1)} />}
-      {step >= 1 && step <= 4 && (
+      {step === 0 && <Intro editing={!!startingPoint} onStart={() => setStep(1)} />}
+      {step >= 1 && step <= questions.length && (
         <Question
           key={step}
           index={step}
           q={questions[step - 1]!}
           selected={answers[questions[step - 1]!.key]}
+          advancing={advancing}
+          editing={!!startingPoint}
+          message={message}
           onChoose={choose}
-          onBack={() => setStep((s) => s - 1)}
+          onBack={goBack}
         />
       )}
-      {step === 5 && (
-        <Summary answers={answers as Required<Answers>} onRestart={() => setStep(1)} />
-      )}
+      {step === questions.length + 1 && startingPoint && <Summary onRestart={restart} />}
     </AppFrame>
   );
 }
 
-function Intro({ onStart }: { onStart: () => void }) {
+function Intro({ editing, onStart }: { editing: boolean; onStart: () => void }) {
   return (
     <div className="flex flex-1 flex-col px-5">
       <section className="animate-rise pt-2">
         <Eyebrow className="mb-3">Before anything else</Eyebrow>
         <h1 className="text-balance text-[30px] font-bold leading-[1.06] tracking-tight">
-          Nervous about your first investment? That's normal.
+          {editing
+            ? "Let's review your starting point."
+            : "Not sure where to begin with investing? That's normal."}
         </h1>
         <p className="mt-3 max-w-[34ch] text-pretty text-[14px] leading-[1.5] text-muted-foreground">
-          Let's talk for two minutes. Four simple questions, then we'll suggest a starting point — and
-          show you exactly why.
+          {editing
+            ? "Review the three questions, keep or change each answer, and we’ll update your Starting Point when you finish."
+            : "Three short questions help us choose what you could understand before investing. No investment amount or fund is chosen for you."}
         </p>
       </section>
 
@@ -118,9 +200,17 @@ function Intro({ onStart }: { onStart: () => void }) {
         ))}
       </ul>
 
-      <div className="animate-rise mt-auto flex flex-col gap-3 pb-6 pt-10" style={{ animationDelay: "200ms" }}>
-        <ActionButton onClick={onStart}>Let's begin</ActionButton>
-        <Link to="/" className="text-center text-[12px] text-muted-foreground hover:text-foreground">
+      <div
+        className="animate-rise mt-auto flex flex-col gap-3 pb-6 pt-10"
+        style={{ animationDelay: "200ms" }}
+      >
+        <ActionButton onClick={onStart}>
+          {editing ? "Review my answers" : "Let's begin"}
+        </ActionButton>
+        <Link
+          to="/"
+          className="text-center text-[12px] text-muted-foreground hover:text-foreground"
+        >
           I'll look around first
         </Link>
       </div>
@@ -132,55 +222,93 @@ function Question({
   index,
   q,
   selected,
+  advancing,
+  editing,
+  message,
   onChoose,
   onBack,
 }: {
   index: number;
   q: (typeof questions)[number];
   selected?: string | undefined;
+  advancing: boolean;
+  editing: boolean;
+  message: string | null;
   onChoose: (k: Key, v: string) => void;
   onBack: () => void;
 }) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
   return (
     <div className="flex flex-1 flex-col px-5">
       <div className="flex items-center gap-4">
         <button
           onClick={onBack}
-          className="font-mono text-[11px] tracking-wider text-muted-foreground hover:text-foreground"
+          className="grid min-h-11 min-w-11 place-items-center font-mono text-[11px] tracking-wider text-muted-foreground hover:text-foreground"
           aria-label="Previous question"
         >
           ←
         </button>
-        <div className="flex-1">
-          <ProgressLine value={(index / 4) * 100} />
+        <div
+          className="flex-1"
+          role="progressbar"
+          aria-label="Onboarding progress"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={((index - 1 + Number(advancing)) / questions.length) * 100}
+          aria-valuetext={`Question ${index} of ${questions.length}`}
+        >
+          <ProgressLine value={((index - 1 + Number(advancing)) / questions.length) * 100} />
         </div>
-        <span className="font-mono text-[11px] text-muted-foreground">{index}/4</span>
+        <span className="font-mono text-[11px] text-muted-foreground" aria-live="polite">
+          {index}/{questions.length}
+        </span>
       </div>
 
       <section className="animate-rise pt-8">
-        <h1 className="text-balance text-[26px] font-bold leading-[1.1] tracking-tight">{q.prompt}</h1>
+        <h1
+          ref={headingRef}
+          tabIndex={-1}
+          className="text-balance text-[26px] font-bold leading-[1.1] tracking-tight"
+        >
+          {q.prompt}
+        </h1>
         {q.aside && (
-          <p className="mt-2.5 text-pretty text-[13px] leading-[1.5] text-muted-foreground">{q.aside}</p>
+          <p className="mt-2.5 text-pretty text-[13px] leading-[1.5] text-muted-foreground">
+            {q.aside}
+          </p>
         )}
       </section>
 
-      <div role="radiogroup" className="animate-rise mt-6 flex flex-col gap-2.5" style={{ animationDelay: "80ms" }}>
+      <div
+        aria-label={q.prompt}
+        role="group"
+        className="animate-rise mt-6 flex flex-col gap-2.5"
+        style={{ animationDelay: "80ms" }}
+      >
         {q.options.map((o) => {
           const on = selected === o.value;
           return (
             <button
               key={o.value}
-              role="radio"
-              aria-checked={on}
+              data-onboarding-answer={o.value}
+              aria-pressed={on}
+              disabled={advancing}
               onClick={() => onChoose(q.key, o.value)}
               className={cn(
                 "flex items-center justify-between gap-3 rounded-[14px] border px-4 py-3.5 text-left transition",
-                on ? "border-primary/60 bg-primary/10 shadow-glow" : "border-line bg-surface hover:border-primary/30",
+                on
+                  ? "border-primary/60 bg-primary/10 shadow-glow"
+                  : "border-line bg-surface hover:border-primary/30",
               )}
             >
               <span>
                 <span className="block text-[15px] font-medium">{o.label}</span>
-                {o.hint && <span className="mt-0.5 block text-[12px] text-muted-foreground">{o.hint}</span>}
+                {o.hint && (
+                  <span className="mt-0.5 block text-[12px] text-muted-foreground">{o.hint}</span>
+                )}
               </span>
               <span
                 className={cn(
@@ -193,6 +321,21 @@ function Question({
         })}
       </div>
 
+      {editing && selected && isValidAnswer(q.key, selected) && (
+        <ActionButton
+          className="mt-4"
+          disabled={advancing}
+          onClick={() => onChoose(q.key, selected)}
+        >
+          Continue
+        </ActionButton>
+      )}
+      {message && (
+        <p role="alert" className="mt-4 text-[13px] text-muted-foreground">
+          {message}
+        </p>
+      )}
+
       <div className="mt-5 pb-6">
         <Explainer question="Why are we asking this?">{q.why}</Explainer>
       </div>
@@ -200,82 +343,25 @@ function Question({
   );
 }
 
-function Summary({ answers, onRestart }: { answers: Required<Answers>; onRestart: () => void }) {
-  const plan = buildPlan(answers);
+function Summary({ onRestart }: { onRestart: () => void }) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
   return (
     <div className="flex flex-col gap-4 px-5 pb-6">
-      <section className="animate-rise pt-2">
-        <Eyebrow className="mb-3">Your starting point</Eyebrow>
-        <h1 className="text-balance text-[28px] font-bold leading-[1.08] tracking-tight">
-          Here's a plan that fits where you are today.
-        </h1>
-      </section>
-
-      <div className="animate-rise" style={{ animationDelay: "80ms" }}>
-        <Panel variant="focus">
-          <Eyebrow>Suggested monthly amount</Eyebrow>
-          <p className="mt-2 text-[34px] font-semibold leading-none tracking-tight">
-            {formatINR(plan.monthly)}
-            <span className="text-[14px] font-normal text-muted-foreground"> / month</span>
-          </p>
-          <p className="mt-2 text-[12px] text-muted-foreground">
-            into <span className="font-medium text-warm">{plan.fundName}</span> · pause or change any time
-          </p>
-        </Panel>
-      </div>
-
-      <div className="animate-rise" style={{ animationDelay: "140ms" }}>
-        <Panel>
-          <Eyebrow tone="warm">How we got here</Eyebrow>
-          <ol className="mt-3 flex flex-col gap-3">
-            {plan.reasons.map((r, i) => (
-              <li key={i} className="flex gap-3 text-pretty text-[13px] leading-[1.5] text-muted-foreground">
-                <span className="mt-0.5 font-mono text-[11px] text-primary">0{i + 1}</span>
-                {r}
-              </li>
-            ))}
-          </ol>
-        </Panel>
-      </div>
-
-      <div className="animate-rise" style={{ animationDelay: "200ms" }}>
-        <Panel>
-          <Eyebrow tone="muted">What this money is for</Eyebrow>
-          <p className="mt-2 text-pretty text-[14px] leading-[1.5]">{plan.purpose}</p>
-        </Panel>
-      </div>
-
-      <div className="animate-rise" style={{ animationDelay: "240ms" }}>
-        <RiskNote level={plan.risk}>{plan.riskText}</RiskNote>
-      </div>
-
-      <Explainer question="Isn't this too small to matter?">
-        Starting small is the point. The first few months are about getting used to seeing your money
-        move. Once it feels normal, you can raise the amount in a tap.
-      </Explainer>
-
-      <Panel>
-        <Eyebrow tone="muted">What happens next</Eyebrow>
-        <ul className="mt-3 flex flex-col gap-2 text-[13px] text-muted-foreground">
-          <li>1. Read about {plan.fundName} in plain words — about two minutes.</li>
-          <li>2. Adjust the amount if it doesn't feel right.</li>
-          <li>3. Decide when you're ready. There's no rush.</li>
-        </ul>
-      </Panel>
-
-      <AdviceNote>
-        This is a starting suggestion based on your four answers — education, not financial advice.
-        You decide whether and when to invest.
-      </AdviceNote>
-
-      <div className="flex flex-col gap-3 pt-2">
-        <ActionLink to="/explore/$fundId" params={{ fundId: plan.fundId }}>
-          Understand my first fund
-        </ActionLink>
-        <ActionButton variant="ghost" onClick={onRestart}>
-          Change my answers
-        </ActionButton>
-      </div>
+      <h1 ref={headingRef} tabIndex={-1} className="sr-only">
+        Your Starting Point
+      </h1>
+      <StartingPointCard from="/plan" />
+      <ReportedAnswers />
+      <ActionLink to="/" variant="ghost">
+        Go to Home
+      </ActionLink>
+      <ActionButton variant="ghost" onClick={onRestart}>
+        Change answers
+      </ActionButton>
+      <AdviceNote />
     </div>
   );
 }

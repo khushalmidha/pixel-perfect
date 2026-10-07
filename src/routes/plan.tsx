@@ -1,53 +1,82 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppFrame } from "@/components/app/AppFrame";
-import { ComingNext, Eyebrow, Panel, ScreenIntro } from "@/components/app/primitives";
-import { AdviceNote, Explainer } from "@/components/app/education";
-import { formatINR, starterPlan, user } from "@/lib/mock-data";
+import { ActionLink, Eyebrow, Panel, ScreenIntro } from "@/components/app/primitives";
+import { AdviceNote } from "@/components/app/education";
+import { ReportedAnswers, StartingPointCard } from "@/components/app/StartingPointCard";
+import { getLesson, storageFailureMessage } from "@/lib/mock-data";
+import { useStartingPointProgress } from "@/lib/starting-point-progress";
 
 export const Route = createFileRoute("/plan")({
   head: () => ({
     meta: [
-      { title: "Your starter plan — Steady" },
-      { name: "description", content: "A personal, comfortable first investing plan built from your answers." },
-      { property: "og:title", content: "Your starter plan — Steady" },
-      { property: "og:description", content: "How much you can comfortably invest, and why." },
+      { title: "Your Starting Point — Steady" },
+      { name: "description", content: "Your answers and a useful learning path." },
     ],
   }),
-  component: Plan,
+  component: StartingPointPage,
 });
-
-function Plan() {
+function StartingPointPage() {
+  const { startingPoint, hydrated, completedIds, storageAvailable } = useStartingPointProgress();
   return (
     <AppFrame>
       <ScreenIntro
-        eyebrow="Starter plan"
-        title={`${formatINR(starterPlan.monthly)} a month feels right for you.`}
-        body={`That's about 1.3% of your ${formatINR(user.monthlyIncome)} income — small enough to forget, steady enough to grow.`}
+        eyebrow="Your answers, your pace"
+        title="Your Starting Point"
+        body="A learning path shaped by what you told us. You can change your answers or explore any topic."
       />
       <div className="flex flex-col gap-4 px-5">
-        <Panel>
-          <Eyebrow>Your path</Eyebrow>
-          <ol className="mt-3 flex flex-col gap-2.5">
-            {starterPlan.steps.map((s, i) => (
-              <li key={s.label} className="flex items-center gap-3 text-[13px]">
-                <span
-                  className={
-                    s.done
-                      ? "grid size-5 place-items-center rounded-full bg-primary font-mono text-[10px] text-primary-foreground"
-                      : "grid size-5 place-items-center rounded-full border border-line font-mono text-[10px] text-muted-foreground"
-                  }
-                >
-                  {s.done ? "✓" : i + 1}
-                </span>
-                <span className={s.done ? "text-muted-foreground" : "text-foreground"}>{s.label}</span>
-              </li>
-            ))}
-          </ol>
-        </Panel>
-        <Explainer question="Why not invest more?">
-          Starting small lets you live through a dip without panic. You can raise the amount any time.
-        </Explainer>
-        <ComingNext>Amount slider with a "what if it dips 10%" preview, in rupees.</ComingNext>
+        {!hydrated ? (
+          <p role="status">Loading your starting point…</p>
+        ) : startingPoint ? (
+          <>
+            <StartingPointCard from="/plan" />
+            <ReportedAnswers />
+            <Panel>
+              <Eyebrow tone="warm">Two suggested lessons</Eyebrow>
+              <ol className="mt-3 flex flex-col gap-4">
+                {startingPoint.lessonIds.map((id) => {
+                  const lesson = getLesson(id)!;
+                  return (
+                    <li key={id}>
+                      <Link
+                        to="/learn"
+                        search={{ lesson: id, from: "/plan" }}
+                        className="text-[14px] font-medium text-primary"
+                      >
+                        {lesson.title}
+                      </Link>
+                      <p className="mt-1 text-[12px] text-muted-foreground">
+                        {completedIds.includes(id)
+                          ? "Completed · revisit any time"
+                          : "Not completed"}{" "}
+                        · {lesson.minutes} min
+                      </p>
+                    </li>
+                  );
+                })}
+              </ol>
+            </Panel>
+            <ActionLink to="/welcome" variant="ghost">
+              Change answers
+            </ActionLink>
+          </>
+        ) : (
+          <>
+            {!storageAvailable && (
+              <p role="status" className="text-[12px] text-muted-foreground">
+                {storageFailureMessage}
+              </p>
+            )}
+            <Panel>
+              <p className="text-[14px]">
+                No Starting Point yet. Answer three questions to find a useful place to begin.
+              </p>
+              <ActionLink className="mt-4" to="/welcome">
+                Find my starting point
+              </ActionLink>
+            </Panel>
+          </>
+        )}
         <AdviceNote />
       </div>
     </AppFrame>
