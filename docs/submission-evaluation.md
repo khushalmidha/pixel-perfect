@@ -1,74 +1,68 @@
-# Steady: completed submission evaluation
+# Steady: submission evaluation
 
-This summarizes verification already performed on the current learning-first Starting Point prototype. The documentation pass did not rerun application tests or browser QA. Results below describe the recorded local checks; they do not establish target-user usability or the behavior of a deployed app.
+Steady uses three onboarding answers to select an educational path. It does not calculate a personal investment amount, assign a fund or assess readiness. Explore and the fictional Money Journey remain available without onboarding.
 
-## Completed automated and static checks
+The original brief asks for the evals used to test the solution. The criteria below are our interpretation of how to evaluate this learning-first prototype, not a list of requirements quoted from the PDF.
 
-| Check                                  | Recorded result                                                                                                                        | What it establishes / limitation                                                                                                                          |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm test`                             | **63 tests passed** across five test files                                                                                             | Vitest/jsdom coverage of educational routing, onboarding, persistence, migration, progress and navigation. Not real-browser layout or user comprehension. |
-| `npx tsc --noEmit --incremental false` | **Passed**                                                                                                                             | Static TypeScript consistency; not a guarantee against runtime failures.                                                                                  |
-| Changed-file ESLint                    | **No errors** in the targeted persistence pass, with **two Fast Refresh warnings**; final onboarding QA fix: **no errors or warnings** | Focused checks on changed source files. Repository-wide lint still has existing unrelated Prettier/CRLF failures; no clean full-lint result is claimed.   |
-| `git diff --check`                     | **Passed** after the implementation/QA changes                                                                                         | Whitespace/conflict-marker check; not deployment or behavior validation.                                                                                  |
+## A. Automated/product verification — completed
 
-The automated coverage includes:
+| Check             | Result                               | Scope                                                                                                                                                                                |
+| ----------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Automated tests   | **63 passed** across five test files | Vitest/jsdom behavior checks, not participant evidence.                                                                                                                              |
+| TypeScript        | **Passed**                           | Static checking with `tsc --noEmit --incremental false`.                                                                                                                             |
+| Changed-file lint | **Passed with no errors**            | The persistence pass had two Fast Refresh warnings; the final onboarding QA fix had no errors or warnings. Full-repository lint still has unrelated existing Prettier/CRLF failures. |
+| Git diff check    | **Passed**                           | Whitespace/conflict-marker check.                                                                                                                                                    |
 
-- All 36 combinations of the three onboarding inputs, including cash-concern precedence and the exact two lessons for each path.
-- Complete-answer validation, rapid-click protection, Back cancellation and cleanup when leaving onboarding.
-- Consistent Starting Point content through summary, Home, Start and restoration; draft editing commits only when finished and retains completed lessons.
-- Valid version-2 records, missing/invalid timestamps normalized to unknown, legacy answer migration and removal of old investment fields.
-- Malformed JSON, missing/invalid answer values, unsupported schemas and storage read/write failures with usable in-memory state and an accurate warning.
-- Next unfinished lesson, unrelated completion, completed paths, Learn catalogue action, all five checks, contextual return and invalid/unsafe lesson destinations.
-- Cross-tab completion merging, independent no-onboarding learning, Explore without personal recommendations and Journey independent of onboarding.
+Coverage includes all 36 answer combinations and educational-path precedence; incomplete-answer rejection; rapid-click and Back behavior; editing and restored state; legacy migration; unknown timestamps; malformed records and storage failures; next-lesson consistency; all five knowledge checks; contextual return; no-onboarding access; cross-tab completion; and the independence of Explore and Journey from personal investment recommendations.
 
-The test files are in [`src/test`](../src/test). Assertions protect the learning-first state model; passing them does not prove that learners understood or retained the explanations.
+The tests are in [src/test](../src/test). The documentation revision reruns tests and TypeScript; browser QA and source-file lint results above refer to the earlier completed checks. Changed Markdown is checked separately for formatting and links because the repository ESLint configuration does not cover Markdown.
 
-## Completed local browser QA
+## B. Browser/manual QA — completed
 
-QA exercised the actual locally running app in headless Chrome through browser clicks and keyboard events, using an isolated browser profile. Screenshots and layout measurements were inspected. This was browser interaction testing performed during development, not sessions with recruited participants.
+Local QA exercised the running app in headless Chrome using browser clicks and keyboard events, an isolated profile, screenshots and layout measurements. This was developer QA, not a target-user study.
 
-| Area                        | Observed result                                                                                                                                                                                                                       |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| First-time onboarding       | All three paths exercised. Answer selection and Back worked; rapid physical clicks advanced once; incomplete/invalid answers did not persist an outcome. Summary and lesson destination matched the path.                             |
-| Learning                    | Feedback, explicit completion, return navigation, next-lesson updates and the completed-path state worked. Completion did not create an investment action or change answers.                                                          |
-| Editing and refresh         | Previous Starting Point remained during a draft. Finishing changed the path while retaining completion; refresh restored it.                                                                                                          |
-| New tab and browser restart | A new tab restored valid answers/completion. A full Chrome close and restart with the same profile preserved both stored records and the derived outcome.                                                                             |
-| Cross-tab behavior          | Completing different lessons in two tabs retained both completions after refresh. Editing answers in one tab updated the other without deleting learning progress.                                                                    |
-| Learn catalogue             | “Explore other topics” scrolled to the existing catalogue on Learn; all five topics remained available. Direct and unknown lesson URLs had usable outcomes.                                                                           |
-| Contextual education        | Returning from an index-fund lesson reopened the originating category explanation. Category Back and Journey lesson-return navigation worked.                                                                                         |
-| Explore/category detail     | Worked without onboarding. No personal recommendation appeared. Valid categories and invalid-category fallback were checked.                                                                                                          |
-| Money Journey               | The displayed example was identical with and without onboarding. Fictional contributions, current value and the example milestone remained clearly labeled.                                                                           |
-| Main/direct routes          | Home, Welcome, Start, Explore, Journey, Learn and valid/invalid lesson/category routes rendered usable screens. Unknown routes displayed recovery navigation.                                                                         |
-| Keyboard basics             | Onboarding controls were keyboard reachable. A focus-loss issue after answer advancement was found and corrected; subsequent checks confirmed focus on the next question heading and summary. This is not a full accessibility audit. |
+| Area                          | Completed observation                                                                                                                                                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Onboarding                    | All three paths, answer advancement, Back and rapid clicks worked. Incomplete/invalid answers did not persist an outcome.                                                                                                |
+| Learning                      | Feedback, completion, next unfinished lesson and completed-path actions worked. Completion did not change answers or create an investment action.                                                                        |
+| Editing/persistence           | A draft retained the old Starting Point until finished. Updated answers and completed lessons survived refresh, a new tab and a full Chrome restart in the same profile.                                                 |
+| Cross-tab behavior            | Different lessons completed in two tabs were retained after refresh. Answer edits updated the other tab without deleting learning progress.                                                                              |
+| Catalogue/contextual learning | “Explore other topics” scrolled to the existing catalogue. Lesson return reopened the category explanation; Journey return and category Back worked.                                                                     |
+| Explore/detail and Journey    | Explore worked without onboarding. Detail remained educational. Journey was the same fictional example with and without onboarding.                                                                                      |
+| Direct/error routes           | Main routes, valid/invalid lessons and categories, and unknown-route recovery rendered usable screens.                                                                                                                   |
+| Mobile viewports              | 320px, 360px, 390px and 1280px checked: 48 route/width cases plus 12 narrow active-state cases showed no measured horizontal overflow. Screenshots reviewed wrapping, buttons, cards and access around fixed navigation. |
+| Keyboard basics               | One onboarding focus-loss issue was found and fixed. Subsequent checks confirmed focus on the next question and summary, with keyboard-reachable controls.                                                               |
+| Trust/copy                    | Source and rendered copy reviewed: no active personal amount/fund recommendation, suitability/readiness claim, guaranteed recovery or personal portfolio history found.                                                  |
 
-Browser diagnostics recorded no application JavaScript exceptions in the checked flows. Expected HTTP 404 responses for intentionally invalid routes were retained as expected behavior, not counted as application crashes.
+No application JavaScript exceptions were recorded in the checked flows. HTTP 404s on deliberately invalid routes were expected.
 
-### Mobile viewport checks
+**Live Vercel check — reported by the project owner:** [the final deployment](https://pixel-perfect-virid.vercel.app/) was manually opened and onboarding → Starting Point → lesson → completion was checked. This is a narrow deployment smoke check, not verification of every route or mobile device. The interactive check has not been independently repeated by the assistant.
 
-Widths **320px, 360px, 390px and 1280px** were checked. The recorded layout sweep covered 48 route/width combinations, with 12 additional active-state combinations for Home, Start, Learn and Welcome at the three narrow widths. Those measurements found no horizontal page overflow or measured main-content elements extending beyond the viewport.
+**Public access check — completed in this documentation pass:** an unauthenticated HTTP request to the deployed Home page returned 200 and contained the Steady title and learning-first Home content. This establishes that the public page was reachable at the time of checking, not that client-side interactions or all deployed files match the local revision.
 
-Screenshots and interactions were also reviewed for wrapping, lesson/card readability, button containment, catalogue scrolling and access to content around the fixed navigation. These checks establish narrow-browser behavior only; they do not simulate physical touch, device safe areas or every mobile browser.
+Local browser scripts, diagnostics and screenshots were recorded outside the repository and are not a bundled browser test suite. No physical-phone, Safari or screen-reader QA is claimed.
 
-### Trust and copy review
+## C. Human usability study — planned, NOT conducted
 
-Source and rendered copy were reviewed for personal investment amounts, assigned funds, suitability/readiness claims, guaranteed recovery and personal financial progress. No active old investment recommendation behavior was found. Historical fields in migration tests and educational arithmetic were distinguished from active personalization.
+The [five-person protocol](usability-evaluation.md) proposes phone-first, 30–35-minute sessions with Indian participants aged 20–26, preferably first-time or very limited investors. Each starts with fresh onboarding and a fictional profile.
 
-The current outcome chooses educational content only. Explore presents illustrative categories rather than specific investable schemes. Risk explanations allow losses and uncertain recovery. Journey is a shared fictional story. Lesson completion records an interaction, not investment readiness or demonstrated mastery.
+The study would test:
 
-This is a product-language review, not professional financial, regulatory or legal certification. It does not establish how real users interpret the wording.
+- Independent onboarding in under three minutes and an unaided explanation of why the Starting Point appeared.
+- Finding a useful next learning action and explaining a meaningful risk.
+- Comparing categories without interpreting lower volatility as safety or personal suitability.
+- Understanding holdings, illustrative information and Journey as an example rather than personal history.
+- Returning from contextual learning, noticing completion changes and retaining context.
+- Confidence alongside comprehension, trust and pressure to invest.
 
-## Planned evaluation — not completed
+Tasks ask for interpretation before directing users or naming the intended answer. The protocol records assistance, hesitation and misunderstandings separately from successful navigation. Its 3/5 rule prioritizes repeated issues; it is not statistical validation.
 
-The [five-person usability protocol](usability-evaluation.md) is **planned** for Indian participants aged approximately 20–26 who are mostly new to investing. It covers onboarding, understanding the Starting Point, learning, contextual return, category discovery, fictional Journey, editing, persistence and navigation.
+**No participant sessions, results, quotes, usability percentages, confidence improvements or measured onboarding times are reported.**
 
-It proposes recording task success/assistance, onboarding time, misconceptions, pressure and confidence alongside comprehension. No participant sessions, results, quotes, completion rates, confidence gains or iteration findings are reported. The under-three-minute onboarding goal has not been established with target users.
+## What this evaluation can and cannot prove
 
-## Verification limits and submission access
+Automated tests verify specified implementation behavior. Browser QA catches interaction, layout and state issues in the tested environment. A five-person study could reveal usability and trust problems worth investigating.
 
-- No final live URL has been supplied or verified. Local QA is not evidence that the deployed version is accessible, current or working.
-- Physical-phone, Safari and screen-reader behavior remain unverified; keyboard checks were limited.
-- Tests and browser QA do not establish demand, learning gains, retention, investment behavior or Gen-Z preferences.
-- The product uses local browser storage, English-only lessons and fictional category/Journey content. There is no account, cross-device persistence, real transaction system or real market data.
-- Browser QA scripts, diagnostics and screenshots were recorded outside the repository during development; they are not bundled here as a portable browser test suite.
+None alone proves long-term understanding, improved financial behavior, investment outcomes or broad Gen-Z product-market fit. Lesson completion is not mastery, readiness or suitability. A copy review is not financial, regulatory or legal certification.
 
-Before submission, provide the final app URL and verify anonymous reviewer access to the same product revision. Keep the separate human-written case-study rationale and actual prompt history alongside this evaluation summary.
+Remaining limits include English-only content, broad learning paths, browser-local persistence and fictional category/Journey data. Physical phones, Safari, assistive technology and broader deployed behavior remain unverified. The final URL is recorded above; confirm that the submitted revision is the one reviewers receive.

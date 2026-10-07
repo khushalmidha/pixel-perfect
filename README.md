@@ -26,7 +26,9 @@ Users can review or edit their answers in Start, browse all five lessons in Lear
 
 ## Live demo and repository
 
-**Live demo: pending — add the final public URL before submission.** No deployed URL has been verified. Once supplied, check reviewer access without a development account and confirm that the link runs the submitted version.
+**Live demo:** [Steady on Vercel](https://pixel-perfect-virid.vercel.app/). The public Home page returned HTTP 200 with Steady's learning-first content when checked from this environment.
+
+The project owner reports manually checking onboarding → Starting Point → lesson → completion on the final deployment. That interactive check has not been independently repeated by the assistant; it does not establish every deployed route, device or state combination.
 
 The configured GitHub remote is [khushalmidha/pixel-perfect](https://github.com/khushalmidha/pixel-perfect). The repository name comes from the earlier project; the current product is Steady. Remote access and the published revision have not been verified. Ensure the final submission includes the existing modified and untracked product files.
 
@@ -68,13 +70,15 @@ Repository-wide lint currently has unrelated existing Prettier/CRLF errors in te
 
 ## Evaluation status
 
-The [completed evaluation summary](docs/submission-evaluation.md) records the automated checks, local browser QA and trust/copy review. These establish implementation behavior within the tested environment, not user comprehension or product effectiveness.
+The [evaluation summary](docs/submission-evaluation.md) separates three kinds of evidence:
 
-The five-person [usability evaluation protocol](docs/usability-evaluation.md) is **planned, not completed**. No participant results, user quotes, onboarding completion times or measured confidence improvements are claimed.
+- **A. Completed automated/product verification:** 63 tests passed, TypeScript passed, focused source lint had no errors, and the diff check passed. Existing full-repository lint failures remain disclosed above.
+- **B. Completed browser/manual QA:** local interaction, layout, state and trust/copy checks; the project owner's narrow Vercel flow check; and the public Home-page HTTP check. These do not establish target-user comprehension.
+- **C. Planned human study, NOT conducted:** the [five-person protocol](docs/usability-evaluation.md) uses neutral tasks and unaided explanations to investigate understanding, hesitation, navigation and trust. No participant results, quotes, usability percentages, measured onboarding times or confidence gains are claimed.
 
 ## Known limitations
 
-- Physical-phone, Safari, screen-reader and deployed-site behavior have not been verified.
+- Physical-phone, Safari and screen-reader behavior have not been verified. Deployed interaction checks are limited to the owner-reported flow above; broader deployed behavior remains unverified.
 - Answers and learning completion persist in one browser; there is no account or cross-device synchronization.
 - English-only content, five short lessons and three broad learning paths limit the prototype's scope. Completion records an interaction, not mastery.
 - Fund categories and Journey values are educational examples, not real schemes, transactions, returns or personal financial progress.

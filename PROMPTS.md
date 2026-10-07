@@ -73,3 +73,7 @@ Assess the frozen product as a strict hiring panel: problem value, defensible pe
 ## 16. Prepare submission documentation
 
 Freeze all product code. Document the actual prompt stages, thesis, flow, configured repository, pending live link, completed local evaluation and planned study. Create no user-study results and run only documentation-related checks.
+
+## 17. Strengthen evaluation credibility
+
+Review evaluation materials against the final learning-first product. Separate completed automated verification, completed browser/manual QA and the unconducted human study. Put unaided comprehension before directed tasks, record assistance and trust misunderstandings, explain the limits of the 3/5 prioritization rule, and retain a phone-first five-person protocol. Record the owner-reported Vercel flow check and supplied URL with their actual scope. Change documentation only, then run tests, TypeScript, changed-document checks and the diff check without inventing research results.
